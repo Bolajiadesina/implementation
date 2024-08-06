@@ -13,11 +13,14 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
-@Data
 public class EmployeeDetailsService implements UserDetailsService {
 
-    @Autowired
-    private EmployeeRepository employeeRepository;
+    private  EmployeeRepository employeeRepository ;
+
+    public EmployeeDetailsService (EmployeeRepository employeeRepository){
+        this.employeeRepository= employeeRepository;
+    }
+
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
