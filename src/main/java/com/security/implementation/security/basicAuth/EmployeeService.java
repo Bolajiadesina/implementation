@@ -18,6 +18,12 @@ public class EmployeeService implements EmployeeRepository {
 
     Logger logger = LoggerFactory.getLogger(EmployeeService.class); 
 
+    private DatabaseConnection databaseConnection;
+
+    public EmployeeService(DatabaseConnection databaseConnection){
+        this.databaseConnection= databaseConnection;
+    }
+
     public Employee findByUsername(String username){
 
 
@@ -26,33 +32,42 @@ public class EmployeeService implements EmployeeRepository {
         Roles role;
         List<Roles> roles= new ArrayList<>();
         Set<Roles> userRoles;
-        DatabaseConnection dbConnection;
-        CallableStatement callableStatement1;
-        CallableStatement callableStatement2;
+        Connection connection= null;
+        DatabaseConnection dbConnection= new DatabaseConnection();
+        CallableStatement callableStatement1= null;
+        CallableStatement callableStatement2= null;
+        ResultSet rs1= null;
+        ResultSet rs2= null;
 
         if(username == null && username.isEmpty()){
             return null;
         }
-        logger.info("Here in EmployeeService class");
+      
         // Step 1: Establishing a Connection
         try {
 
            
-            dbConnection = getDBConnection();
-           
-            callableStatement1 = ((Connection) dbConnection).prepareCall("{?=call public.findByUsername(?)}");
-            callableStatement2 = ((Connection) dbConnection).prepareCall("{?=call public.getUserRoles(?)}");
-        
+            try {
+                connection = dbConnection.getDBConnection() ;
+                connection.setAutoCommit(false);
+            } catch (ClassNotFoundException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            logger.info("Here in EmployeeService class again");
+            callableStatement1 = connection.prepareCall("{?=call public.findByUsername(?)}");
+            callableStatement2 = connection.prepareCall("{?=call public.getUserRoles(?)}");
+            
             callableStatement1.setString(1, username);  
             callableStatement2.setString(1, username);   
             //register multiple output parameters to match all return values
-            callableStatement1.registerOutParameter(1, java.sql.Types.REF_CURSOR);
-            callableStatement2.registerOutParameter(1, java.sql.Types.REF_CURSOR);
+            callableStatement1.registerOutParameter(2, java.sql.Types.REF_CURSOR);
+            callableStatement2.registerOutParameter(2, java.sql.Types.REF_CURSOR);
 
             callableStatement1.execute();
             callableStatement2.execute();
-            ResultSet rs1 = (ResultSet) callableStatement1.getObject(1);
-            ResultSet rs2 = (ResultSet) callableStatement1.getObject(1);
+             rs1 = (ResultSet) callableStatement1.getObject(2);
+             rs2 = (ResultSet) callableStatement2.getObject(2);
 
             // Step 4: Process the ResultSet object.
             while (rs1.next()) {
@@ -65,16 +80,30 @@ public class EmployeeService implements EmployeeRepository {
 
             while (rs2.next()) {
                 role= new Roles();
-                role.setName(rs2.getString("role"));
+                role.setName(rs2.getString("name"));
                 roles.add(role);
             }
             userRoles = new HashSet<Roles>(roles);
             employee.setRoles(userRoles);
+            logger.info(employee.toString());
 
-
-        } catch (SQLException e) {
+        } catch (SQLException esql) {
             
-        
+            esql.printStackTrace();
+        } finally {
+            try {
+                if (callableStatement1 != null) {
+                    callableStatement1.close();
+                }
+                if (callableStatement2 != null) {
+                    callableStatement2.close();
+                }
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
         }
 
 
@@ -85,17 +114,14 @@ public class EmployeeService implements EmployeeRepository {
 
     }
 
-    private DatabaseConnection getDBConnection() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getDBConnection'");
-    }
-
+   
     @Override
     public List<Employee> getAllEmployee() {
         Employee employee;
         List<Employee> employeeList= new ArrayList <>();
-        DatabaseConnection dbConnection;
-        CallableStatement callableStatement;
+        DatabaseConnection dbConnection=null;
+        CallableStatement callableStatement= null;
+        Connection connection= null;
 
       
 
@@ -103,7 +129,12 @@ public class EmployeeService implements EmployeeRepository {
         try {
 
             String callableSQL = "{?=call public.getAllEmployees()}";
-            dbConnection = getDBConnection();
+            try {
+                connection = dbConnection.getDBConnection();
+            } catch (ClassNotFoundException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
            
             callableStatement = ((Connection) dbConnection).prepareCall(callableSQL);
         
