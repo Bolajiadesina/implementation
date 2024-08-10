@@ -1,4 +1,4 @@
-package com.security.implementation.security.basicAuth;
+package com.security.implementation.security.basicAuth.model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

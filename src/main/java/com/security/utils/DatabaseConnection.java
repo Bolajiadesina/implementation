@@ -1,4 +1,4 @@
-package com.security.implementation.security.basicAuth;
+package com.security.utils;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

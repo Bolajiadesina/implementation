@@ -1,4 +1,4 @@
-package com.security.implementation.security.basicAuth;
+package com.security.implementation.security.basicAuth.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

@@ -37,3 +37,35 @@ BEGIN
    -- RETURN v_result;
 END;
 $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION getAllEmployees( INOUT v_result refcursor DEFAULT NULL::refcursor)
+ RETURNS refcursor
+ LANGUAGE plpgsql
+AS $function$
+BEGIN
+    -- Open the cursor with the query result
+    OPEN v_result FOR
+    SELECT  e.id,e.employee_name,e.name,e.email,e.employee_username FROM EMPLOYEE e J;
+
+    --RETURN v_result;
+END;
+$function$
+;
+
+CREATE OR REPLACE FUNCTION getUserRoles( employeename text,INOUT v_result refcursor DEFAULT NULL::refcursor)
+ RETURNS refcursor
+ LANGUAGE plpgsql
+AS $function$
+BEGIN
+    -- Open the cursor with the query result
+    OPEN v_result FOR
+    SELECT r.name 
+FROM roles r 
+JOIN employee_roles er ON r.id = er.role_id 
+JOIN employee e ON er.employee_id = e.id  
+WHERE e.name = employeename ;
+
+    --RETURN v_result;
+END;
+$function$
+;
