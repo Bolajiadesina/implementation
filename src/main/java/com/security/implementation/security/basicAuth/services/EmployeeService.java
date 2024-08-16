@@ -216,19 +216,20 @@ public class EmployeeService implements EmployeeRepository {
             
             try {
                 connection = dbConnection.getDBConnection();
-                connection.setAutoCommit(false);
+                connection.setAutoCommit(true);
             } catch (ClassNotFoundException e) { 
                
                 e.printStackTrace();
             }
            logger.info(employee.toString());
-            callableStatement = connection.prepareCall("{?=call public.saveEmployee(?,?,?,?,?)}");
+           callableStatement = connection.prepareCall("{?=call public.saveEmployee(?,?,?,?,?)}");
+
         
           //register multiple output parameters to match all return values
             
             callableStatement.setString(1, employee.getEmployeeId() == null ? "" : employee.getEmployeeId());
-            callableStatement.setString(2, employee.getName()== null ? "" : employee.getName());
-            callableStatement.setString(3, employee.getEmail()== null ? "" :employee.getEmail());
+            callableStatement.setString(2, employee.getEmail()== null ? "" :employee.getEmail());
+            callableStatement.setString(3, employee.getName()== null ? "" : employee.getName());
             callableStatement.setString(4, employee.getPassword()  == null ? "" : employee.getPassword());
             callableStatement.setString(5, employee.getUserName() == null ? "" :employee.getUserName());
             callableStatement.registerOutParameter(6, java.sql.Types.VARCHAR);
@@ -237,7 +238,7 @@ public class EmployeeService implements EmployeeRepository {
             callableStatement.execute();
             
             // Step 4: Process the ResultSet object.
-            response.setResponseCode((String) callableStatement.getObject(1));
+            response.setResponseCode((String) callableStatement.getObject(6));
             
             response.setResponseMessage("Success");
             // Commit the transaction
@@ -282,43 +283,66 @@ public class EmployeeService implements EmployeeRepository {
         CallableStatement callableStatement= null;
         Response response= new Response();
 
+        String updateResponse=null;
+
+        logger.info(employee.toString());
+
         // Step 1: Establishing a Connection
         try {
 
             
             try {
                 connection = dbConnection.getDBConnection();
-                connection.setAutoCommit(false);
+                connection.setAutoCommit(true);
             } catch (ClassNotFoundException e) {
                
                 e.printStackTrace();
             }
            
-            callableStatement = connection.prepareCall("{?=call public.updateuser(?,?,?,?,?,?)}");
+            callableStatement = connection.prepareCall("{?=call public.updateEmployee(?,?,?,?,?)}");
         
          
-            callableStatement.setString(2, employee.getEmployeeId()  == null ? "" : employee.getEmployeeId());
-            callableStatement.setString(3, employee.getName()== null ? "" : employee.getName());
-            callableStatement.setString(4, employee.getEmail()== null ? "" :employee.getEmail());
-            callableStatement.setString(5, employee.getEmployeeId()== null ? "" :employee.getEmployeeId());
-            callableStatement.setString(6, employee.getUserName() == null ? "" :employee.getUserName());
-            callableStatement.setString(7, employee.getPassword()  == null ? "" : employee.getPassword());
+            callableStatement.setString(1, employee.getEmployeeId()  == null ? "" : employee.getEmployeeId());
+            callableStatement.setString(2, employee.getName()== null ? "" : employee.getName());
+            callableStatement.setString(3, employee.getEmail()== null ? "" :employee.getEmail());
+            callableStatement.setString(4, employee.getPassword()  == null ? "" : employee.getPassword());
+            callableStatement.setString(5, employee.getUserName() == null ? "" :employee.getUserName());
+          
         
             //register multiple output parameters to match all return values
-            callableStatement.registerOutParameter(1, java.sql.Types.VARCHAR);
+            callableStatement.registerOutParameter(6, java.sql.Types.VARCHAR);
            
         
             callableStatement.execute();
-            ResultSet rs = (ResultSet) callableStatement.getObject(1);
+            
+        
+            updateResponse=(String) callableStatement.getObject(6);
+           
 
+               
             // Step 4: Process the ResultSet object.
+           
             response.setResponseCode("00");
             response.setResponseMessage("Success");
-            
+
+            if (!("00".equals(updateResponse))){
+                response.setResponseCode("ERROR");
+                response.setResponseMessage("Failed: " + updateResponse);
+            }
+
            
         } catch (SQLException e) {
-            
-            
+            try {
+            if (connection != null) {
+                connection.rollback();  // Rollback transaction in case of error
+            }
+        } catch (SQLException rollbackEx) {
+            rollbackEx.printStackTrace();
+        }
+        response.setResponseCode("ERROR");
+        response.setResponseMessage("Failed: " + e.getMessage());
+        e.printStackTrace();
+
         } finally {
             try {
                 if (callableStatement != null) {
