@@ -24,7 +24,7 @@ SELECT * FROM EMPLOYEE;
 SELECT * FROM ROLES;
 SELECT * FROM EMPLOYEE_ROLES;
 
-findByUsername
+
 
 CREATE OR REPLACE FUNCTION findByUsername(user_name TEXT, INOUT v_result REFCURSOR DEFAULT NULL)
 RETURNS REFCURSOR AS $$
@@ -69,3 +69,59 @@ WHERE e.name = employeename ;
 END;
 $function$
 ;
+
+
+
+
+CREATE OR REPLACE FUNCTION public.saveEmployee(
+    p_employeeId VARCHAR,
+    p_name VARCHAR,
+    p_email VARCHAR,
+    p_password VARCHAR,
+    p_userName VARCHAR
+) RETURNS VARCHAR AS $$
+BEGIN
+   INSERT INTO employee(id,email,employee_name,employee_password,employee_username) VALUES
+((CAST (p_employeeId AS BIGINT)),p_email,p_name,p_password,p_userName);
+
+
+    RETURN '00';
+EXCEPTION
+    WHEN OTHERS THEN
+        -- Return an error code or message if something goes wrong
+        RETURN '01: ' || SQLERRM;
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+
+
+CREATE OR REPLACE FUNCTION public.updateEmployee(
+    p_employeeId VARCHAR,
+    p_name VARCHAR,
+    p_email VARCHAR,
+    p_password VARCHAR,
+    p_userName VARCHAR
+) RETURNS VARCHAR AS $$
+BEGIN
+    -- Function logic here
+    UPDATE EMPLOYEE 
+    SET 
+        email = p_email,
+        employee_name = p_name,
+        employee_password = p_password,
+        employee_username = p_userName 
+    WHERE id = CAST(p_employeeId AS BIGINT);
+
+    RETURN '00';
+EXCEPTION
+    WHEN OTHERS THEN
+        -- Return an error code or message if something goes wrong
+        RETURN '01: ' || SQLERRM;
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+
